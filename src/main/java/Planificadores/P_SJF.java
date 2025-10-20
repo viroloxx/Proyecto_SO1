@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package Planificadores;
 
 import Clases.Cola;
@@ -21,8 +17,7 @@ public class P_SJF implements UI_planificador {
         PCB procesoMasCorto = null;
         int minInstrucciones = Integer.MAX_VALUE;
 
-        // 2. Primera pasada: vaciar colaListos, encontrar el más corto
-        //    y llenar la colaTemporal
+        // 2. Primera pasada: vaciar colaListos, encontrar el más corto y llenar la colaTemporal
         while (!colaListos.estaVacia()) {
             PCB actual = colaListos.desencolar();
             
@@ -34,8 +29,7 @@ public class P_SJF implements UI_planificador {
             colaTemporal.encolar(actual);
         }
 
-        // 3. Segunda pasada: devolver todos los procesos a colaListos,
-        //    excepto el seleccionado (procesoMasCorto)
+        // 3. Segunda pasada: devolver todos los procesos a colaListos, excepto el seleccionado (procesoMasCorto)
         while (!colaTemporal.estaVacia()) {
             PCB actual = colaTemporal.desencolar();
             
@@ -48,3 +42,4 @@ public class P_SJF implements UI_planificador {
         // 4. Devolver el proceso seleccionado
         return procesoMasCorto;
     }
+}

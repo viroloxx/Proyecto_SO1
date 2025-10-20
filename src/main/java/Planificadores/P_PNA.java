@@ -1,7 +1,4 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
+
 package Planificadores;
 
 import Clases.Cola;
@@ -22,9 +19,9 @@ public class P_PNA implements UI_planificador {
 
         Cola<PCB> colaTemporal = new Cola<>();
         PCB procesoPrioritario = null;
-        int maxPrioridad = Integer.MAX_VALUE; // (ej. 0 es más alto que 10)
+        int maxPrioridad = Integer.MAX_VALUE; 
 
-        // 1. Encontrar el proceso con la prioridad más alta (número más bajo)
+        // 1. Encontrar el proceso con la prioridad más alta 
         while (!colaListos.estaVacia()) {
             PCB actual = colaListos.desencolar();
             
