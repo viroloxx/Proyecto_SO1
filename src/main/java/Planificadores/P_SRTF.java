@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package Planificadores;
 
 import Clases.Cola;
@@ -12,8 +8,7 @@ import Clases.PCB;
  *
  * @author Diego A. Vivolo
  */
-public class P_SRTF {
-    public class PlanificadorSRTF implements UI_planificador {
+public class P_SRTF implements UI_planificador {
 
     @Override
     public PCB seleccionarSiguienteProceso(Cola<PCB> colaListos) {
@@ -39,8 +34,7 @@ public class P_SRTF {
             colaTemporal.encolar(actual);
         }
 
-        // 3. Segunda pasada: devolver todos los procesos a colaListos,
-        //    excepto el seleccionado (procesoMasCorto)
+        // 3. Segunda pasada: devolver todos los procesos a colaListos, excepto el seleccionado (procesoMasCorto)
         while (!colaTemporal.estaVacia()) {
             PCB actual = colaTemporal.desencolar();
             if (actual.getId() != procesoMasCorto.getId()) {
@@ -53,4 +47,3 @@ public class P_SRTF {
     }
 }
     
-}

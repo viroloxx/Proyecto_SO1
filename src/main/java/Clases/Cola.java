@@ -39,4 +39,11 @@ public class Cola<T> {
     public String toString() {
         return "Frente -> " + listaInterna.toString() + " -> Final";
     }
+    public void remover(T dato) {
+            this.listaInterna.remover(dato);
+        }
+
+    PCB desecolar() {
+        throw new UnsupportedOperationException("Not supported yet."); 
+    }
 }

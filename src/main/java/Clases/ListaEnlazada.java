@@ -1,9 +1,5 @@
 package Clases;
 
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 
 /**
  *
@@ -102,5 +98,37 @@ public class ListaEnlazada<T> {
         }
         sb.append("]");
         return sb.toString();
+    }
+    public boolean remover(T dato) {
+        if (estaVacia()) {
+            return false;
+        }
+
+
+        if (this.cabeza.dato.equals(dato)) { 
+            eliminarDelFrente(); 
+            return true;
+        }
+
+
+        Nodo actual = this.cabeza;
+
+        while (actual.siguiente != null && !actual.siguiente.dato.equals(dato)) {
+            actual = actual.siguiente;
+        }
+
+        if (actual.siguiente != null) {
+            Nodo nodoAEliminar = actual.siguiente;
+
+            if (nodoAEliminar == this.cola) {
+                this.cola = actual;
+            }
+
+            actual.siguiente = nodoAEliminar.siguiente;
+            this.tamano--;
+            return true; 
+        }
+
+        return false; 
     }
 }

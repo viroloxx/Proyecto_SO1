@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- */
-
 package Clases;
 
 /**
@@ -11,6 +7,5 @@ package Clases;
 public class Proyecto_OS {
 
     public static void main(String[] args) {
-        System.out.println("Hello World!");
     }
 }

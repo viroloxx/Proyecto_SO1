@@ -1,11 +1,6 @@
 package Clases;
 
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
-
-/**
  *
  * @author Diego A. Vivolo
  */
@@ -43,25 +38,19 @@ public class PCB {
     private final TipoProceso tipoProceso;
 
     private final int ciclosParaExcepcion;
-    
     private final int ciclosParaCompletarExcepcion;
-    
     private int ciclosEjecutadosDesdeIO;
-
     private final int prioridad;
     
-    /**
-     * Constructor para un proceso CPU-Bound.
-     * @param nombre El nombre del proceso.
-     * @param totalInstrucciones La cantidad total de instrucciones.
-     */
-    public PCB(String nombre, int totalInstrucciones) {
+
+    public PCB(String nombre, int totalInstrucciones, int prioridad) {
         this.id = ++contadorId;
         this.nombre = nombre;
         this.totalInstrucciones = totalInstrucciones;
         this.tipoProceso = TipoProceso.CPU_BOUND;
+        this.prioridad = prioridad;
         
-        // Valores no aplicables para CPU-bound
+
         this.ciclosParaExcepcion = -1;
         this.ciclosParaCompletarExcepcion = -1; 
         
@@ -72,14 +61,8 @@ public class PCB {
         this.ciclosEjecutadosDesdeIO = 0;
     }
 
-    /**
-     * Constructor para un proceso I/O-Bound.
-     * @param nombre El nombre del proceso.
-     * @param totalInstrucciones La cantidad total de instrucciones.
-     * @param ciclosParaExcepcion Ciclos para generar una E/S.
-     * @param ciclosParaCompletarExcepcion Ciclos para resolver la E/S.
-     */
-    public PCB(String nombre, int totalInstrucciones, int ciclosParaExcepcion, int ciclosParaCompletarExcepcion) {
+
+    public PCB(String nombre, int totalInstrucciones, int ciclosParaExcepcion, int ciclosParaCompletarExcepcion, int prioridad) {
         this.id = ++contadorId;
         this.nombre = nombre;
         this.totalInstrucciones = totalInstrucciones;
@@ -87,6 +70,7 @@ public class PCB {
         
         this.ciclosParaExcepcion = ciclosParaExcepcion;
         this.ciclosParaCompletarExcepcion = ciclosParaCompletarExcepcion;
+        this.prioridad = prioridad; // Esta asignación ahora es válida
         
         // Valores iniciales
         this.estado = Estado.NUEVO;
@@ -95,17 +79,10 @@ public class PCB {
         this.ciclosEjecutadosDesdeIO = 0;
     }
 
-    // --- Métodos de Simulación ---
-
-    /**
-     * Simula la ejecución de un ciclo de reloj para este proceso.
-     * Incrementa el PC y el MAR en una unidad.
-     * También incrementa el contador de ciclos para la próxima E/S si aplica.
-     */
     public void ejecutarCiclo() {
         if (this.estado == Estado.EJECUCION) {
             this.programCounter++;
-            this.memoryAddressRegister++; // PC y MAR incrementan linealmente
+            this.memoryAddressRegister++; 
             
             if (this.tipoProceso == TipoProceso.IO_BOUND) {
                 this.ciclosEjecutadosDesdeIO++;
@@ -114,16 +91,13 @@ public class PCB {
     }
 
     /**
-     * Verifica si el proceso ha completado todas sus instrucciones.
-     * @return true si PC >= totalInstrucciones, false de lo contrario.
+     * REVISA QUE EL PROCESO HAYA TERMINADO SUS INSTRUCCIONES
      */
     public boolean haTerminado() {
         return this.programCounter >= this.totalInstrucciones;
     }
-    
     /**
-     * Verifica si el proceso debe generar una excepción de E/S en este ciclo.
-     * @return true si es I/O-bound y ha cumplido sus ciclos, false de lo contrario.
+     *REVISA QUE SE HAYA HECHO UNA EXCEPCION DE E/S
      */
     public boolean debeGenerarExcepcionIO() {
         return this.tipoProceso == TipoProceso.IO_BOUND && 
@@ -131,14 +105,22 @@ public class PCB {
     }
 
     /**
-     * Reinicia el contador de ciclos de E/S.
-     * Se debe llamar después de que una excepción de E/S es manejada.
+     *REINICIA CONTADOR DE CICOS
      */
     public void reiniciarContadorIO() {
         this.ciclosEjecutadosDesdeIO = 0;
     }
+    
+    /**
+     *DEVUELVE TIEMPO RESTANTE
+     */
+    public int getTiempoRestante() {
+        return this.totalInstrucciones - this.programCounter;
+    }
 
-    // --- Getters y Setters ---
+    public int getPrioridad() {
+            return this.prioridad;
+    }
     
     public int getId() {
         return id;
@@ -188,17 +170,17 @@ public class PCB {
         return ciclosParaCompletarExcepcion;
     }
 
-    /**
-     * Representación en String del PCB, útil para debugging y logs.
-     */
+
     @Override
     public String toString() {
+
         String info = String.format("PCB %d [%s] - %s | PC: %d/%d",
                 id,
                 nombre,
                 estado,
                 programCounter,
-                totalInstruE
+                totalInstrucciones 
+        );
         if (tipoProceso == TipoProceso.IO_BOUND) {
             info += String.format(" | IO (Ciclos: %d/%d)", 
                     ciclosEjecutadosDesdeIO, ciclosParaExcepcion);

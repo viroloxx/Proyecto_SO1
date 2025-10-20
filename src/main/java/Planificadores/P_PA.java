@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package Planificadores;
 
 import Clases.Cola;
@@ -16,7 +12,6 @@ public class P_PA implements UI_planificador {
 
     @Override
     public PCB seleccionarSiguienteProceso(Cola<PCB> colaListos) {
-        // La lógica de selección es la misma:
         // encontrar el de mayor prioridad en la cola.
         
         if (colaListos.estaVacia()) {
