@@ -3,6 +3,7 @@ package Clases;
 /*
  *
  * @author Diego A. Vivolo
+ * @author Gabriel Orozco 
  */
 
 public class PCB {
@@ -42,6 +43,9 @@ public class PCB {
     private int ciclosEjecutadosDesdeIO;
     private final int prioridad;
     
+    // --- NUEVO: Campos para Métricas ---
+    private int cicloLlegada;
+    private int cicloFin;
 
     public PCB(String nombre, int totalInstrucciones, int prioridad) {
         this.id = ++contadorId;
@@ -50,7 +54,6 @@ public class PCB {
         this.tipoProceso = TipoProceso.CPU_BOUND;
         this.prioridad = prioridad;
         
-
         this.ciclosParaExcepcion = -1;
         this.ciclosParaCompletarExcepcion = -1; 
         
@@ -59,6 +62,10 @@ public class PCB {
         this.programCounter = 0;
         this.memoryAddressRegister = 0;
         this.ciclosEjecutadosDesdeIO = 0;
+        
+        // Métricas
+        this.cicloLlegada = 0; 
+        this.cicloFin = 0;
     }
 
 
@@ -70,13 +77,17 @@ public class PCB {
         
         this.ciclosParaExcepcion = ciclosParaExcepcion;
         this.ciclosParaCompletarExcepcion = ciclosParaCompletarExcepcion;
-        this.prioridad = prioridad; // Esta asignación ahora es válida
+        this.prioridad = prioridad; 
         
         // Valores iniciales
         this.estado = Estado.NUEVO;
         this.programCounter = 0;
         this.memoryAddressRegister = 0;
         this.ciclosEjecutadosDesdeIO = 0;
+        
+        // Métricas
+        this.cicloLlegada = 0;
+        this.cicloFin = 0;
     }
 
     public void ejecutarCiclo() {
@@ -130,6 +141,7 @@ public class PCB {
         return nombre;
     }
 
+
     public Estado getEstado() {
         return estado;
     }
@@ -170,14 +182,43 @@ public class PCB {
         return ciclosParaCompletarExcepcion;
     }
 
+    // --- NUEVO: Getters y Setters para Métricas ---
+    
+    public int getCicloLlegada() {
+        return cicloLlegada;
+    }
+
+    public void setCicloLlegada(int cicloLlegada) {
+        this.cicloLlegada = cicloLlegada;
+    }
+
+    public int getCicloFin() {
+        return cicloFin;
+    }
+
+    public void setCicloFin(int cicloFin) {
+        this.cicloFin = cicloFin;
+    }
+    
+    /**
+     * Calcula el Turnaround Time (Tiempo de Retorno) del proceso.
+     * @return 
+     */
+    public int getTurnaroundTime() {
+        if (this.cicloFin > 0) {
+            return this.cicloFin - this.cicloLlegada;
+        }
+        return 0;
+    }
 
     @Override
     public String toString() {
-
-        String info = String.format("PCB %d [%s] - %s | PC: %d/%d",
+        // Reducido para que quepa mejor en la GUI
+        String info = String.format("ID %d: %s (%s) | P:%d\nPC: %d/%d",
                 id,
                 nombre,
-                estado,
+                tipoProceso.name(),
+                prioridad,
                 programCounter,
                 totalInstrucciones 
         );

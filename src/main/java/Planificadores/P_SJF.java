@@ -41,4 +41,4 @@ public class P_SJF implements UI_planificador {
 
         // 4. Devolver el proceso seleccionado
         return procesoMasCorto;
-    }
+    }}

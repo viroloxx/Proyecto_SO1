@@ -4,6 +4,7 @@ package Clases;
 /**
  *
  * @author Diego A. Vivolo
+ * @author Gabriel Orozco 
  */
 public class Cola<T> {
 
@@ -37,13 +38,22 @@ public class Cola<T> {
 
     @Override
     public String toString() {
-        return "Frente -> " + listaInterna.toString() + " -> Final";
+        // Modificado para mostrar mejor en la GUI (un proceso por línea)
+        String s = listaInterna.toString();
+        
+        // Quita los corchetes
+        if (s.length() > 2) {
+            s = s.substring(1, s.length() - 1);
+        } else {
+            return ""; // Vacío
+        }
+        
+        // Reemplaza la flecha por saltos de línea
+        return s.replace(" -> ", "\n\n");
     }
+    
     public void remover(T dato) {
             this.listaInterna.remover(dato);
-        }
-
-    PCB desecolar() {
-        throw new UnsupportedOperationException("Not supported yet."); 
     }
+
 }
