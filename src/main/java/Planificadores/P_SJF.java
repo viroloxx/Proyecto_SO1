@@ -1,5 +1,8 @@
 package Planificadores;
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 import Clases.Cola;
 import Clases.PCB;
 import UI.UI_planificador;
