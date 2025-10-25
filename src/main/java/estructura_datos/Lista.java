@@ -1,6 +1,7 @@
 package estructura_datos;
 import modelo.PCB;
 
+
 public class Lista {
     private Nodo cabeza;
     private int tamanio;
@@ -78,4 +79,6 @@ public class Lista {
         cabeza = null;
         tamanio = 0;
     }
+    
+    
 }
