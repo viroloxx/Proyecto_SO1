@@ -1,0 +1,201 @@
+package gui;
+import javax.swing.*;
+import java.awt.*;
+import sistema.SistemaOperativo;
+import planificacion.*;
+import modelo.TipoProceso;
+import javax.swing.JOptionPane;
+
+public class PanelControl extends JPanel {
+    private SistemaOperativo sistema;
+    private JButton btnIniciar, btnPausar, btnReiniciar, btnAgregarProceso;
+    private JComboBox<String> comboPlanificador;
+    private JLabel lblEstado, lblCiclo, lblPlanificador;
+
+
+    private JButton btnCambiarVelocidad;
+    private JLabel lblVelocidadActual;
+
+
+    public PanelControl(SistemaOperativo sistema) {
+        this.sistema = sistema;
+        setLayout(new GridLayout(3, 1, 5, 5));
+        setBorder(BorderFactory.createTitledBorder("Control del Sistema"));
+
+        // Fila 1: Botones principales
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        btnIniciar = new JButton("Iniciar");
+        btnPausar = new JButton("Pausar");
+        btnReiniciar = new JButton("Reiniciar");
+        btnAgregarProceso = new JButton("Agregar Proceso(s)");
+        
+        panelBotones.add(btnIniciar);
+        panelBotones.add(btnPausar);
+        panelBotones.add(btnReiniciar);
+        panelBotones.add(btnAgregarProceso);
+        
+        add(panelBotones);
+
+        // Fila 2: Planificación
+        JPanel panelPlanificacion = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        lblPlanificador = new JLabel("Algoritmo:");
+        comboPlanificador = new JComboBox<>(new String[]{"FCFS", "SJF", "SRTF", "Prioridad NP", "Prioridad P", "Round Robin", "Multilevel FB Queue"});
+        panelPlanificacion.add(lblPlanificador);
+        panelPlanificacion.add(comboPlanificador);
+        add(panelPlanificacion);
+
+        // Fila 3: Velocidad y Estado
+        JPanel panelEstado = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+
+        panelEstado.add(new JLabel("Velocidad (ms/ciclo):"));
+        
+        // Etiqueta para mostrar valor actual
+        int velocidadInicial = sistema.getReloj().getDuracionCicloMs();
+        lblVelocidadActual = new JLabel(velocidadInicial + " ms");
+        panelEstado.add(lblVelocidadActual);
+        
+        // Botón para cambiar
+        btnCambiarVelocidad = new JButton("Cambiar");
+        panelEstado.add(btnCambiarVelocidad);
+        
+        lblCiclo = new JLabel("Ciclo: 0");
+        panelEstado.add(lblCiclo);
+        
+        lblEstado = new JLabel("Detenido");
+        lblEstado.setFont(new Font(lblEstado.getFont().getName(), Font.BOLD, lblEstado.getFont().getSize()));
+        panelEstado.add(lblEstado);
+        
+        add(panelEstado);
+        
+        // --- Listeners ---
+        
+        btnIniciar.addActionListener(e -> {
+            if (!sistema.isEjecutando()) {
+                sistema.iniciar();
+            } else if (sistema.estaPausado()) {
+                sistema.reanudar();
+            }
+        });
+        
+        btnPausar.addActionListener(e -> sistema.pausar());
+        btnReiniciar.addActionListener(e -> sistema.reiniciar());
+        btnAgregarProceso.addActionListener(e -> mostrarDialogoAgregarProceso());
+        
+        comboPlanificador.addActionListener(e -> {
+            String seleccion = (String) comboPlanificador.getSelectedItem();
+            Planificador p;
+            switch (seleccion) {
+                case "SJF": p = new SJF(false); break;
+                case "SRTF": p = new SJF(true); break;
+                case "Prioridad NP": p = new Prioridad(false); break;
+                case "Prioridad P": p = new Prioridad(true); break;
+                case "Round Robin": p = new RoundRobin(sistema.getQuantumPorDefecto()); break;
+                case "Multilevel FB Queue": p = new MultilevelQueue(); break;
+                default: p = new FCFS();
+            }
+            sistema.cambiarPlanificador(p);
+        });
+        
+        btnCambiarVelocidad.addActionListener(e -> mostrarDialogoVelocidad());
+        
+        sistema.getReloj().setDuracionCicloMs(velocidadInicial);
+        sistema.cambiarPlanificador(new FCFS());
+    }
+
+    private void mostrarDialogoVelocidad() {
+        String valorActual = String.valueOf(sistema.getReloj().getDuracionCicloMs());
+        
+        String nuevoValorStr = (String) JOptionPane.showInputDialog(
+            this,
+            "Ingresa la nueva duración del ciclo (ms):",
+            "Cambiar Velocidad",
+            JOptionPane.PLAIN_MESSAGE,
+            null,
+            null,
+            valorActual
+        );
+
+        if (nuevoValorStr != null && !nuevoValorStr.isEmpty()) {
+            try {
+                int nuevoValor = Integer.parseInt(nuevoValorStr);
+                if (nuevoValor >= 0) { // Permitir 0 para velocidad máxima
+                    sistema.getReloj().setDuracionCicloMs(nuevoValor);
+                    lblVelocidadActual.setText(nuevoValor + " ms");
+                } else {
+                    JOptionPane.showMessageDialog(this, "El valor debe ser positivo.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Por favor, ingresa un número válido.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+    
+    private void mostrarDialogoAgregarProceso() {
+        JDialog dialogo = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Agregar Proceso(s)", true);
+        
+        dialogo.setLayout(new GridLayout(6, 2, 10, 10)); 
+        dialogo.setSize(400, 250);
+        dialogo.setLocationRelativeTo(this);
+
+        // Fila 1
+        dialogo.add(new JLabel("Nombre Base:"));
+        JTextField txtNombre = new JTextField("Proc");
+        dialogo.add(txtNombre);
+
+        // Fila 2
+        dialogo.add(new JLabel("Cantidad:"));
+        JSpinner spinCantidad = new JSpinner(new SpinnerNumberModel(1, 1, 50, 1));
+        dialogo.add(spinCantidad);
+
+        // Fila 3
+        dialogo.add(new JLabel("Tipo:"));
+        JComboBox<String> comboTipo = new JComboBox<>(new String[]{"CPU Bound", "I/O Bound"});
+        dialogo.add(comboTipo);
+
+        // Fila 4
+        dialogo.add(new JLabel("Instrucciones (Ciclos):"));
+        JSpinner spinInstrucciones = new JSpinner(new SpinnerNumberModel(10, 5, 100, 5));
+        dialogo.add(spinInstrucciones);
+
+        // Fila 5
+        dialogo.add(new JLabel("Prioridad (0=Alta):"));
+        JSpinner spinPrioridad = new JSpinner(new SpinnerNumberModel(5, 0, 10, 1));
+        dialogo.add(spinPrioridad);
+        
+        // Fila 6: Botones
+        JButton btnCrear = new JButton("Crear");
+        JButton btnCancelar = new JButton("Cancelar");
+
+        btnCrear.addActionListener(e -> {
+            int cantidad = (Integer) spinCantidad.getValue();
+            String nombreBase = txtNombre.getText();
+            TipoProceso tipo = comboTipo.getSelectedIndex() == 0 ? TipoProceso.CPU_BOUND : TipoProceso.IO_BOUND;
+            int instrucciones = (Integer) spinInstrucciones.getValue();
+            int prioridad = (Integer) spinPrioridad.getValue();
+
+            for (int i = 0; i < cantidad; i++) {
+                String nombreProceso = cantidad > 1 ? nombreBase + "_" + (i + 1) : nombreBase;
+                sistema.agregarProceso(nombreProceso, tipo, instrucciones, prioridad);
+            }
+            dialogo.dispose();
+        });
+
+        btnCancelar.addActionListener(e -> dialogo.dispose());
+
+        dialogo.add(btnCrear);
+        dialogo.add(btnCancelar);
+        dialogo.setVisible(true);
+    }
+    
+    public void actualizar() {
+        lblCiclo.setText("Ciclo: " + sistema.getReloj().getCicloActual());
+        
+        if (!sistema.isEjecutando()) {
+            lblEstado.setText("Detenido");
+        } else if (sistema.estaPausado()) {
+            lblEstado.setText("Pausado");
+        } else {
+            lblEstado.setText("Ejecutando");
+        }
+    }
+}
