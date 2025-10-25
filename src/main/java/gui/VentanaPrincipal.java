@@ -5,6 +5,9 @@ import sistema.SistemaOperativo;
 import persistencia.*;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import persistencia.PersistenciaCSV; 
+import persistencia.PersistenciaJSON; 
+import java.io.File; 
 
 public class VentanaPrincipal extends JFrame {
     private SistemaOperativo sistema;
@@ -13,7 +16,8 @@ public class VentanaPrincipal extends JFrame {
     private Timer actualizador;
 
     public VentanaPrincipal() {
-        ConfiguracionSistema config = new ConfiguracionSistema(300, "FCFS", 3);
+        
+        ConfiguracionSistema config = GestorConfiguracion.cargarConfiguracion(); 
         this.sistema = new SistemaOperativo(config);
         inicializarComponentes();
         iniciarActualizador();
@@ -24,7 +28,7 @@ public class VentanaPrincipal extends JFrame {
         setSize(1400, 900);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
-
+        
         setLayout(new BorderLayout(10, 10));
 
         // Crear pestañas para organizar la interfaz
@@ -38,30 +42,35 @@ public class VentanaPrincipal extends JFrame {
 
         add(pestanas, BorderLayout.CENTER);
         
-
+    
         JMenuBar menuBar = new JMenuBar();
-        JMenu menuArchivo = new JMenu("Archivo");
-        
+        JMenu menuArchivo = new JMenu("Carga/Guarda");
 
-        JMenuItem itemExportarCSV = new JMenuItem("Exportar a CSV...");
-        JMenuItem itemExportarJSON = new JMenuItem("Exportar a JSON...");
         
-
+        JMenuItem itemCargarJSON = new JMenuItem("Cargar Procesos desde JSON...");
+        itemCargarJSON.setEnabled(false); 
+        
+    
+        JMenuItem itemGuardarCSV = new JMenuItem("Guardar Resultados en CSV...");
+        JMenuItem itemGuardarJSON = new JMenuItem("Guardar Resultados en JSON...");
+        
         JMenuItem itemSalir = new JMenuItem("Salir");
         
-        menuArchivo.add(itemExportarCSV);
-        menuArchivo.add(itemExportarJSON);
-        menuArchivo.addSeparator(); 
+        
+        menuArchivo.add(itemCargarJSON);
+        menuArchivo.addSeparator();
+        menuArchivo.add(itemGuardarCSV);
+        menuArchivo.add(itemGuardarJSON);
+        menuArchivo.addSeparator();
         menuArchivo.add(itemSalir);
         
         menuBar.add(menuArchivo);
         setJMenuBar(menuBar);
 
-    
+        // --- ACTION LISTENERS ---
         itemSalir.addActionListener(e -> System.exit(0));
-        
-        itemExportarCSV.addActionListener(e -> exportarACSV());
-        itemExportarJSON.addActionListener(e -> exportarAJSON());
+        itemGuardarCSV.addActionListener(e -> guardarACSV());
+        itemGuardarJSON.addActionListener(e -> guardarAJSON());
     }
     
     private void iniciarActualizador() {
@@ -72,90 +81,82 @@ public class VentanaPrincipal extends JFrame {
         actualizador.start();
     }
     
-private void exportarACSV() {
- 
+    
+    private void guardarACSV() {
+    
         boolean estabaEjecutando = sistema.isEjecutando() && !sistema.estaPausado();
         if (estabaEjecutando) {
             sistema.pausar();
         }
 
-      
         JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Guardar como CSV");
+        fileChooser.setDialogTitle("Guardar Resultados como CSV");
         fileChooser.setFileFilter(new FileNameExtensionFilter("Archivos CSV (*.csv)", "csv"));
         
-        int seleccion = fileChooser.showSaveDialog(this);
-        
-        if (seleccion == JFileChooser.APPROVE_OPTION) {
+        if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
-                String ruta = fileChooser.getSelectedFile().getAbsolutePath();
+                File archivo = fileChooser.getSelectedFile();
+                String ruta = archivo.getAbsolutePath();
                 if (!ruta.toLowerCase().endsWith(".csv")) {
                     ruta += ".csv";
                 }
                 
-         
+
                 PersistenciaCSV.guardarResultados(sistema.getAdminProcesos().getListaTerminados(), ruta);
                 
-                JOptionPane.showMessageDialog(this, "Resultados guardados en:\n" + ruta, "Exportar CSV", JOptionPane.INFORMATION_MESSAGE);
-            
+                JOptionPane.showMessageDialog(this, "Resultados guardados en CSV:\n" + ruta, "Exportación Exitosa", JOptionPane.INFORMATION_MESSAGE);
                 
             } catch (Exception ex) {
-        
-                JOptionPane.showMessageDialog(this, "Error al guardar CSV: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                ex.printStackTrace(); // Bueno para depurar
+                JOptionPane.showMessageDialog(this, "Error al guardar CSV: " + ex.getMessage(), "Error de Exportación", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
             }
         }
         
-        // 4. Reanudamos la simulación
+    
         if (estabaEjecutando) {
             sistema.reanudar();
         }
     }
 
-
-    private void exportarAJSON() {
-
+    // --- FUNCIÓN PARA GUARDAR EN JSON ---
+    private void guardarAJSON() {
         boolean estabaEjecutando = sistema.isEjecutando() && !sistema.estaPausado();
         if (estabaEjecutando) {
             sistema.pausar();
         }
 
-
         JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Guardar como JSON");
+        fileChooser.setDialogTitle("Guardar Resultados como JSON");
         fileChooser.setFileFilter(new FileNameExtensionFilter("Archivos JSON (*.json)", "json"));
         
-        int seleccion = fileChooser.showSaveDialog(this);
-        
-        if (seleccion == JFileChooser.APPROVE_OPTION) {
+        if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
-                String ruta = fileChooser.getSelectedFile().getAbsolutePath();
+                File archivo = fileChooser.getSelectedFile();
+                String ruta = archivo.getAbsolutePath();
                 if (!ruta.toLowerCase().endsWith(".json")) {
                     ruta += ".json";
                 }
                 
-
+            
                 PersistenciaJSON.guardarResultados(sistema.getAdminProcesos().getListaTerminados(), ruta);
 
-                JOptionPane.showMessageDialog(this, "Resultados guardados en:\n" + ruta, "Exportar JSON", JOptionPane.INFORMATION_MESSAGE);
-
+                JOptionPane.showMessageDialog(this, "Resultados guardados en JSON:\n" + ruta, "Exportación Exitosa", JOptionPane.INFORMATION_MESSAGE);
 
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Error al guardar JSON: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                ex.printStackTrace(); // Bueno para depurar
+                JOptionPane.showMessageDialog(this, "Error al guardar JSON: " + ex.getMessage(), "Error de Exportación", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
             }
         }
         
-
         if (estabaEjecutando) {
             sistema.reanudar();
         }
     }
+
     
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             try {
-
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             } catch (Exception e) {
                 e.printStackTrace();
