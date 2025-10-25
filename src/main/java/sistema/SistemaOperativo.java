@@ -121,7 +121,13 @@ public class SistemaOperativo implements Runnable {
                 } else {
                     metricas.registrarCiclo(false); // CPU libre
                 }
-                
+
+                // Registrar historial de métricas para el gráfico
+                PCB[] todosLosProcesos = adminProcesos.obtenerTodosLosProcesos();
+                PCB[] procesosTerminados = adminProcesos.getListaTerminados().toArray();
+                int procesosActivos = todosLosProcesos.length - procesosTerminados.length;
+                metricas.registrarHistorial(ciclo, todosLosProcesos, procesosTerminados, procesosActivos);
+
             } catch (Exception e) {
                 System.err.println("Error en el ciclo principal del SO: " + e);
                 e.printStackTrace();

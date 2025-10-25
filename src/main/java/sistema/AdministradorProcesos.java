@@ -123,7 +123,44 @@ public class AdministradorProcesos {
         listaTerminados.limpiar();
         contadorID = 1;
     }
-    
+
+    /**
+     * Obtiene todos los procesos del sistema (en todas las colas y lista)
+     *
+     * @return Array con todos los procesos del sistema
+     */
+    public synchronized PCB[] obtenerTodosLosProcesos() {
+        // Contar total de procesos
+        int total = colaNuevos.obtenerTamanio() + colaListos.obtenerTamanio() +
+                   colaBloqueados.obtenerTamanio() + colaSuspendidosListos.obtenerTamanio() +
+                   colaSuspendidosBloqueados.obtenerTamanio() + listaTerminados.obtenerTamanio();
+
+        PCB[] todosLosProcesos = new PCB[total];
+        int indice = 0;
+
+        // Copiar procesos de cada cola/lista
+        for (PCB p : colaNuevos.toArray()) {
+            todosLosProcesos[indice++] = p;
+        }
+        for (PCB p : colaListos.toArray()) {
+            todosLosProcesos[indice++] = p;
+        }
+        for (PCB p : colaBloqueados.toArray()) {
+            todosLosProcesos[indice++] = p;
+        }
+        for (PCB p : colaSuspendidosListos.toArray()) {
+            todosLosProcesos[indice++] = p;
+        }
+        for (PCB p : colaSuspendidosBloqueados.toArray()) {
+            todosLosProcesos[indice++] = p;
+        }
+        for (PCB p : listaTerminados.toArray()) {
+            todosLosProcesos[indice++] = p;
+        }
+
+        return todosLosProcesos;
+    }
+
     // Getters
     public Cola getColaNuevos() { return colaNuevos; }
     public Cola getColaListos() { return colaListos; }
