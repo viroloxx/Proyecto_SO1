@@ -9,8 +9,9 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 public class VentanaPrincipal extends JFrame {
     private SistemaOperativo sistema;
     private PanelCentral panelCentral;
+    private PanelGrafico panelGrafico;
     private Timer actualizador;
-    
+
     public VentanaPrincipal() {
         ConfiguracionSistema config = new ConfiguracionSistema(300, "FCFS", 3);
         this.sistema = new SistemaOperativo(config);
@@ -25,9 +26,17 @@ public class VentanaPrincipal extends JFrame {
         setLocationRelativeTo(null);
 
         setLayout(new BorderLayout(10, 10));
-        
+
+        // Crear pestañas para organizar la interfaz
+        JTabbedPane pestanas = new JTabbedPane();
+
         panelCentral = new PanelCentral(sistema);
-        add(panelCentral, BorderLayout.CENTER);
+        panelGrafico = new PanelGrafico();
+
+        pestanas.addTab("Simulación", panelCentral);
+        pestanas.addTab("Gráfico de Métricas", panelGrafico);
+
+        add(pestanas, BorderLayout.CENTER);
         
 
         JMenuBar menuBar = new JMenuBar();
@@ -58,6 +67,7 @@ public class VentanaPrincipal extends JFrame {
     private void iniciarActualizador() {
         actualizador = new Timer(100, e -> {
             panelCentral.actualizar();
+            panelGrafico.actualizar(sistema.getMetricas().getHistorial());
         });
         actualizador.start();
     }
