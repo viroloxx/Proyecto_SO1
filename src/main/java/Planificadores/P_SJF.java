@@ -1,5 +1,6 @@
-package Clases;
-
+package Planificadores;
+import Clases.Cola;
+import Clases.PCB;
 import UI.UI_planificador;
 
 public class P_SJF implements UI_planificador {
