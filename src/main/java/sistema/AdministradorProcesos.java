@@ -24,10 +24,10 @@ public class AdministradorProcesos {
         this.semaforo = new Semaphore(1);
     }
     
-    public synchronized PCB crearProceso(String nombre, TipoProceso tipo, int numInstrucciones, 
+    public synchronized PCB crearProceso(String nombre, TipoProceso tipo, int numInstrucciones,
                                         int prioridad, int tiempoLlegada) {
         PCB nuevoProceso;
-        
+
         // Distinguir constructores de PCB (uno para CPU_BOUND, otro para IO_BOUND)
         if (tipo == TipoProceso.CPU_BOUND) {
             // Constructor para CPU_BOUND (sin E/S)
@@ -35,9 +35,36 @@ public class AdministradorProcesos {
         } else {
             // Constructor para I/O_BOUND (con E/S)
             // Asumimos valores por defecto para E/S (ej: cada 5 ciclos, dura 8)
-            // --- ESTA ES LA LÍNEA CORREGIDA ---
-            // Se eliminó el argumento 'tipo' de esta llamada al constructor
             nuevoProceso = new PCB(contadorID++, nombre, numInstrucciones, prioridad, tiempoLlegada, 5, 8);
+        }
+        colaNuevos.encolar(nuevoProceso);
+        return nuevoProceso;
+    }
+
+    /**
+     * Crea un nuevo proceso I/O Bound con parámetros personalizados de E/S
+     *
+     * @param nombre Nombre del proceso
+     * @param tipo Tipo de proceso
+     * @param numInstrucciones Número de instrucciones
+     * @param prioridad Prioridad del proceso
+     * @param tiempoLlegada Tiempo de llegada del proceso
+     * @param ciclosParaExcepcion Ciclos necesarios para generar una excepción
+     * @param ciclosParaSatisfacerExcepcion Ciclos necesarios para satisfacer la excepción
+     * @return El PCB del proceso creado
+     */
+    public synchronized PCB crearProceso(String nombre, TipoProceso tipo, int numInstrucciones,
+                                        int prioridad, int tiempoLlegada,
+                                        int ciclosParaExcepcion, int ciclosParaSatisfacerExcepcion) {
+        PCB nuevoProceso;
+
+        if (tipo == TipoProceso.CPU_BOUND) {
+            // Constructor para CPU_BOUND (sin E/S)
+            nuevoProceso = new PCB(contadorID++, nombre, tipo, numInstrucciones, prioridad, tiempoLlegada);
+        } else {
+            // Constructor para I/O_BOUND con parámetros personalizados de E/S
+            nuevoProceso = new PCB(contadorID++, nombre, numInstrucciones, prioridad, tiempoLlegada,
+                                  ciclosParaExcepcion, ciclosParaSatisfacerExcepcion);
         }
         colaNuevos.encolar(nuevoProceso);
         return nuevoProceso;
@@ -54,6 +81,24 @@ public class AdministradorProcesos {
                     colaListos.encolar(proceso);
                 }
             }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } finally {
+            semaforo.release();
+        }
+    }
+
+    /**
+     * Admite un proceso específico de la cola de nuevos
+     *
+     * @param proceso El proceso a admitir
+     */
+    public synchronized void admitirProceso(PCB proceso) {
+        try {
+            semaforo.acquire();
+            colaNuevos.eliminarPorId(proceso.getIdProceso());
+            proceso.setEstado(EstadoProceso.LISTO);
+            colaListos.encolar(proceso);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         } finally {

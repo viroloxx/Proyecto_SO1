@@ -21,23 +21,25 @@ public class PersistenciaCSV {
         
         
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(ruta))) {
-        
-            bw.write("ID,Nombre,Tipo,Prioridad,TiempoLlegada,TiempoEjecucion,TiempoRetorno,TiempoEspera\n");
-            
-        
+
+            bw.write("ID,Nombre,Tipo,Prioridad,TiempoLlegada,TiempoEjecucion,TiempoRetorno,TiempoEspera,CiclosParaExcepcion,CiclosParaSatisfacerExcepcion\n");
+
+
             PCB[] procesos = terminados.toArray();
-      
+
             for (PCB pcb : procesos) {
-                
-                String linea = String.format("%d,%s,%s,%d,%d,%d,%d,%d\n",
+
+                String linea = String.format("%d,%s,%s,%d,%d,%d,%d,%d,%d,%d\n",
                         pcb.getIdProceso(),
                         pcb.getNombre(),
-                        pcb.getTipo().toString(), 
+                        pcb.getTipo().toString(),
                         pcb.getPrioridad(),
                         pcb.getTiempoLlegada(),
-                        pcb.getTiempoEjecucion(), 
-                        pcb.getTiempoRetorno(),    
-                        pcb.getTiempoEsperaTotal() 
+                        pcb.getTiempoEjecucion(),
+                        pcb.getTiempoRetorno(),
+                        pcb.getTiempoEsperaTotal(),
+                        pcb.getCiclosParaExcepcion(),
+                        pcb.getCiclosParaSatisfacerExcepcion()
                 );
                 bw.write(linea);
             }

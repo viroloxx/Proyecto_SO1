@@ -1,0 +1,5 @@
+{
+  "duracionCicloMs": 1000,
+  "planificadorInicial": "FCFS",
+  "quantumRR": 3
+}

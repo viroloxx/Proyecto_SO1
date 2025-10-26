@@ -106,6 +106,8 @@ public class PCB {
     public int getTiempoRespuesta() { return tiempoRespuesta; }
     public int getTiempoRetorno() { return tiempoRetorno; }
     public int getCiclosExcepcionRestantes() { return ciclosExcepcionRestantes; }
+    public int getCiclosParaExcepcion() { return ciclosParaExcepcion; }
+    public int getCiclosParaSatisfacerExcepcion() { return ciclosParaSatisfacerExcepcion; }
     public boolean isPrimeraEjecucion() { return primeraEjecucion; }
     
     // Setters

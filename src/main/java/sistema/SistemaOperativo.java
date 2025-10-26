@@ -6,6 +6,7 @@ import excepciones.*;
 import metricas.*;
 import persistencia.*;
 import estructura_datos.*;
+import memoria.AdministradorMemoria;
 
 public class SistemaOperativo implements Runnable {
     private RelojSistema reloj;
@@ -14,6 +15,8 @@ public class SistemaOperativo implements Runnable {
     private ManejadorExcepciones manejadorExc;
     private Metricas metricas;
     private Planificador planificadorActual;
+    private AdministradorMemoria adminMemoria;
+    private PlanificadorMedianoPlazo planificadorMP;
     private boolean ejecutando;
     private StringBuilder logEventos;
     private int quantumPorDefecto; 
@@ -28,9 +31,15 @@ public class SistemaOperativo implements Runnable {
         );
         this.metricas = new Metricas();
         this.planificadorActual = new FCFS(); // El planificador inicial se establece en el GUI
+
+        // Inicializar gestión de memoria
+        // Valores por defecto: 10 procesos máximo, 5000 unidades de memoria
+        this.adminMemoria = new AdministradorMemoria(10, 5000);
+        this.planificadorMP = new PlanificadorMedianoPlazo(adminProcesos, adminMemoria);
+
         this.ejecutando = false;
         this.logEventos = new StringBuilder();
-        this.quantumPorDefecto = config.getQuantumRR(); // 
+        this.quantumPorDefecto = config.getQuantumRR();
     }
     
     public synchronized void cambiarPlanificador(Planificador nuevoPlanificador) {
@@ -39,10 +48,61 @@ public class SistemaOperativo implements Runnable {
         planificadorActual.reorganizarCola(adminProcesos.getColaListos());
         agregarLog("Planificador cambiado a: " + nuevoPlanificador.obtenerNombre());
     }
+
+    /**
+     * Planificador a Largo Plazo: Admite procesos de la cola de nuevos
+     * Solo los admite si hay espacio en memoria disponible
+     *
+     * @param cicloActual Ciclo actual del sistema
+     */
+    private void admitirProcesosConMemoria(int cicloActual) {
+        PCB[] nuevos = adminProcesos.getColaNuevos().toArray();
+
+        for (PCB proceso : nuevos) {
+            if (proceso.getTiempoLlegada() <= cicloActual) {
+                // Intentar cargar el proceso en memoria
+                if (adminMemoria.cargarProceso(proceso)) {
+                    // Si hay espacio, admitir SOLO este proceso específico
+                    adminProcesos.admitirProceso(proceso);
+                    agregarLog(String.format("Proceso %s(ID:%d) admitido y cargado en memoria",
+                                           proceso.getNombre(), proceso.getIdProceso()));
+                } else {
+                    // Si no hay espacio, el proceso permanece en la cola de nuevos
+                    // Solo logueamos una vez por ciclo para evitar spam
+                    if (adminProcesos.getColaNuevos().obtenerTamanio() > 0 &&
+                        proceso == nuevos[0]) {
+                        agregarLog(String.format("Memoria llena: %d procesos esperando admisión",
+                                               nuevos.length));
+                    }
+                    break; // No intentar admitir más si la memoria está llena
+                }
+            }
+        }
+    }
     
     public void agregarProceso(String nombre, TipoProceso tipo, int numInstrucciones, int prioridad) {
         PCB proceso = adminProcesos.crearProceso(nombre, tipo, numInstrucciones, prioridad, reloj.getCicloActual());
         agregarLog(String.format("Nuevo proceso %s(ID:%d) creado.", proceso.getNombre(), proceso.getIdProceso()));
+    }
+
+    /**
+     * Agrega un nuevo proceso I/O Bound con parámetros personalizados de E/S
+     *
+     * @param nombre Nombre del proceso
+     * @param tipo Tipo de proceso (debe ser IO_BOUND)
+     * @param numInstrucciones Número de instrucciones
+     * @param prioridad Prioridad del proceso
+     * @param ciclosParaExcepcion Ciclos necesarios para generar una excepción
+     * @param ciclosParaSatisfacerExcepcion Ciclos necesarios para satisfacer la excepción
+     */
+    public void agregarProceso(String nombre, TipoProceso tipo, int numInstrucciones, int prioridad,
+                              int ciclosParaExcepcion, int ciclosParaSatisfacerExcepcion) {
+        PCB proceso = adminProcesos.crearProceso(nombre, tipo, numInstrucciones, prioridad,
+                                                reloj.getCicloActual(), ciclosParaExcepcion,
+                                                ciclosParaSatisfacerExcepcion);
+        agregarLog(String.format("Nuevo proceso %s(ID:%d) creado. E/S cada %d ciclos, duración %d ciclos.",
+                                proceso.getNombre(), proceso.getIdProceso(),
+                                ciclosParaExcepcion, ciclosParaSatisfacerExcepcion));
     }
     
     @Override
@@ -61,19 +121,25 @@ public class SistemaOperativo implements Runnable {
                 reloj.incrementarCiclo();
                 int ciclo = reloj.getCicloActual();
                 
-                // 2. Admitir nuevos procesos
-                adminProcesos.admitirProcesosNuevos(ciclo);
-                
-                // 3. Procesar E/S (Excepciones)
+                // 2. Planificador a Largo Plazo: Admitir nuevos procesos
+                admitirProcesosConMemoria(ciclo);
+
+                // 3. Planificador a Mediano Plazo: Gestionar suspensiones
+                String logMP = planificadorMP.ejecutarCiclo(ciclo);
+                if (!logMP.isEmpty()) {
+                    agregarLog(logMP);
+                }
+
+                // 4. Procesar E/S (Excepciones)
                 manejadorExc.procesarExcepciones();
                 
-                // 4. Incrementar tiempo de espera de procesos en cola de listos
+                // 5. Incrementar tiempo de espera de procesos en cola de listos
                 adminProcesos.actualizarTiemposEspera(ciclo);
-                
-                // 5. Ejecución de CPU
+
+                // 6. Planificador a Corto Plazo: Ejecución de CPU
                 PCB procesoEnCPU = cpu.getProcesoActual();
-                
-                // 5a. ¿Hay que expropiar el proceso actual?
+
+                // 6a. ¿Hay que expropiar el proceso actual?
                 if (procesoEnCPU != null && planificadorActual.esExpropriativo()) {
                     boolean expropiar = planificadorActual.debeExpropriar(
                         procesoEnCPU, 
@@ -90,7 +156,7 @@ public class SistemaOperativo implements Runnable {
                     }
                 }
                 
-                // 5b. Si CPU está libre, planificar
+                // 6b. Si CPU está libre, planificar
                 if (procesoEnCPU == null) {
                     procesoEnCPU = planificadorActual.seleccionarSiguienteProceso(adminProcesos.getColaListos());
                     if (procesoEnCPU != null) {
@@ -100,7 +166,7 @@ public class SistemaOperativo implements Runnable {
                     }
                 }
                 
-                // 5c. Ejecutar ciclo de CPU
+                // 6c. Ejecutar ciclo de CPU
                 if (procesoEnCPU != null) {
                     boolean generoExcepcion = cpu.ejecutarCiclo(ciclo);
                     
@@ -116,6 +182,8 @@ public class SistemaOperativo implements Runnable {
                         p.setEstado(EstadoProceso.TERMINADO);
                         adminProcesos.getListaTerminados().agregar(p);
                         metricas.registrarProcesoCompletado(p, ciclo);
+                        // Liberar memoria del proceso terminado
+                        adminMemoria.liberarProceso(p);
                     }
                     metricas.registrarCiclo(true); // CPU ocupada
                 } else {
@@ -161,11 +229,13 @@ public class SistemaOperativo implements Runnable {
         detener();
         // Esperar un momento a que el hilo termine
         try { Thread.sleep(reloj.getDuracionCicloMs() + 50); } catch (InterruptedException e) {}
-        
+
         reloj.reiniciar();
         cpu = new CPU();
         adminProcesos.reiniciar();
         metricas.reiniciar();
+        adminMemoria.reiniciar();
+        planificadorMP.reiniciar();
         logEventos = new StringBuilder();
         agregarLog("Sistema reiniciado");
     }
@@ -199,10 +269,11 @@ public class SistemaOperativo implements Runnable {
     public AdministradorProcesos getAdminProcesos() { return adminProcesos; }
     public Metricas getMetricas() { return metricas; }
     public Planificador getPlanificadorActual() { return planificadorActual; }
+    public AdministradorMemoria getAdminMemoria() { return adminMemoria; }
+    public PlanificadorMedianoPlazo getPlanificadorMP() { return planificadorMP; }
     public boolean isEjecutando() { return ejecutando; }
     public boolean estaPausado() { return reloj.estaPausado(); }
-    
-    // <-- CAMBIO 3: Getter añadido -->
+
     public int getQuantumPorDefecto() {
         return this.quantumPorDefecto;
     }

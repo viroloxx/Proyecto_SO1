@@ -5,6 +5,8 @@ import sistema.SistemaOperativo;
 import planificacion.*;
 import modelo.TipoProceso;
 import javax.swing.JOptionPane;
+import persistencia.ConfiguracionSistema;
+import persistencia.GestorConfiguracion;
 
 public class PanelControl extends JPanel {
     private SistemaOperativo sistema;
@@ -121,6 +123,13 @@ public class PanelControl extends JPanel {
                 if (nuevoValor >= 0) { // Permitir 0 para velocidad máxima
                     sistema.getReloj().setDuracionCicloMs(nuevoValor);
                     lblVelocidadActual.setText(nuevoValor + " ms");
+
+                    // Guardar la nueva configuración
+                    ConfiguracionSistema config = GestorConfiguracion.cargarConfiguracion();
+                    config.setDuracionCicloMs(nuevoValor);
+                    if (GestorConfiguracion.guardarConfiguracion(config)) {
+                        System.out.println("Duración del ciclo actualizada y guardada: " + nuevoValor + " ms");
+                    }
                 } else {
                     JOptionPane.showMessageDialog(this, "El valor debe ser positivo.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
@@ -132,37 +141,66 @@ public class PanelControl extends JPanel {
     
     private void mostrarDialogoAgregarProceso() {
         JDialog dialogo = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Agregar Proceso(s)", true);
-        
-        dialogo.setLayout(new GridLayout(6, 2, 10, 10)); 
-        dialogo.setSize(400, 250);
+
+        dialogo.setLayout(new GridLayout(9, 2, 10, 10));
+        dialogo.setSize(500, 400);
         dialogo.setLocationRelativeTo(this);
 
-        // Fila 1
+        // Fila 1: Nombre
         dialogo.add(new JLabel("Nombre Base:"));
         JTextField txtNombre = new JTextField("Proc");
         dialogo.add(txtNombre);
 
-        // Fila 2
+        // Fila 2: Cantidad
         dialogo.add(new JLabel("Cantidad:"));
         JSpinner spinCantidad = new JSpinner(new SpinnerNumberModel(1, 1, 50, 1));
         dialogo.add(spinCantidad);
 
-        // Fila 3
+        // Fila 3: Tipo
         dialogo.add(new JLabel("Tipo:"));
         JComboBox<String> comboTipo = new JComboBox<>(new String[]{"CPU Bound", "I/O Bound"});
         dialogo.add(comboTipo);
 
-        // Fila 4
+        // Fila 4: Instrucciones
         dialogo.add(new JLabel("Instrucciones (Ciclos):"));
         JSpinner spinInstrucciones = new JSpinner(new SpinnerNumberModel(10, 5, 100, 5));
         dialogo.add(spinInstrucciones);
 
-        // Fila 5
+        // Fila 5: Prioridad
         dialogo.add(new JLabel("Prioridad (0=Alta):"));
         JSpinner spinPrioridad = new JSpinner(new SpinnerNumberModel(5, 0, 10, 1));
         dialogo.add(spinPrioridad);
-        
-        // Fila 6: Botones
+
+        // Fila 6: Ciclos para generar E/S (solo I/O Bound)
+        JLabel lblCiclosExcepcion = new JLabel("Ciclos para E/S:");
+        JSpinner spinCiclosExcepcion = new JSpinner(new SpinnerNumberModel(5, 1, 50, 1));
+        lblCiclosExcepcion.setEnabled(false);
+        spinCiclosExcepcion.setEnabled(false);
+        dialogo.add(lblCiclosExcepcion);
+        dialogo.add(spinCiclosExcepcion);
+
+        // Fila 7: Ciclos para satisfacer E/S (solo I/O Bound)
+        JLabel lblDuracionExcepcion = new JLabel("Duración E/S (ciclos):");
+        JSpinner spinDuracionExcepcion = new JSpinner(new SpinnerNumberModel(8, 1, 50, 1));
+        lblDuracionExcepcion.setEnabled(false);
+        spinDuracionExcepcion.setEnabled(false);
+        dialogo.add(lblDuracionExcepcion);
+        dialogo.add(spinDuracionExcepcion);
+
+        // Listener para habilitar/deshabilitar campos de I/O
+        comboTipo.addActionListener(e -> {
+            boolean esIOBound = comboTipo.getSelectedIndex() == 1;
+            lblCiclosExcepcion.setEnabled(esIOBound);
+            spinCiclosExcepcion.setEnabled(esIOBound);
+            lblDuracionExcepcion.setEnabled(esIOBound);
+            spinDuracionExcepcion.setEnabled(esIOBound);
+        });
+
+        // Fila 8: Espacio vacío
+        dialogo.add(new JLabel(""));
+        dialogo.add(new JLabel(""));
+
+        // Fila 9: Botones
         JButton btnCrear = new JButton("Crear");
         JButton btnCancelar = new JButton("Cancelar");
 
@@ -172,10 +210,18 @@ public class PanelControl extends JPanel {
             TipoProceso tipo = comboTipo.getSelectedIndex() == 0 ? TipoProceso.CPU_BOUND : TipoProceso.IO_BOUND;
             int instrucciones = (Integer) spinInstrucciones.getValue();
             int prioridad = (Integer) spinPrioridad.getValue();
+            int ciclosExcepcion = (Integer) spinCiclosExcepcion.getValue();
+            int duracionExcepcion = (Integer) spinDuracionExcepcion.getValue();
 
             for (int i = 0; i < cantidad; i++) {
                 String nombreProceso = cantidad > 1 ? nombreBase + "_" + (i + 1) : nombreBase;
-                sistema.agregarProceso(nombreProceso, tipo, instrucciones, prioridad);
+
+                if (tipo == TipoProceso.IO_BOUND) {
+                    sistema.agregarProceso(nombreProceso, tipo, instrucciones, prioridad,
+                                          ciclosExcepcion, duracionExcepcion);
+                } else {
+                    sistema.agregarProceso(nombreProceso, tipo, instrucciones, prioridad);
+                }
             }
             dialogo.dispose();
         });

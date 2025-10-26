@@ -9,6 +9,7 @@ public class PanelCentral extends JPanel {
     private PanelCPU panelCPU;
     private PanelColas panelColas;
     private PanelMetricas panelMetricas;
+    private PanelMemoria panelMemoria;
     private JTextArea areaLog;
     
     public PanelCentral(SistemaOperativo sistema) {
@@ -33,13 +34,17 @@ public class PanelCentral extends JPanel {
         
         add(panelMedio, BorderLayout.CENTER);
         
-        // Panel inferior: Métricas y Log
-        JPanel panelInferior = new JPanel(new GridLayout(1, 2, 10, 10));
-        
+        // Panel inferior: Métricas, Memoria y Log
+        JPanel panelInferior = new JPanel(new GridLayout(1, 3, 10, 10));
+
         // Métricas
         panelMetricas = new PanelMetricas(sistema);
         panelInferior.add(panelMetricas);
-        
+
+        // Memoria
+        panelMemoria = new PanelMemoria(sistema);
+        panelInferior.add(panelMemoria);
+
         // Log de eventos
         JPanel panelLog = new JPanel(new BorderLayout());
         panelLog.setBorder(BorderFactory.createTitledBorder("Log de Eventos"));
@@ -49,13 +54,10 @@ public class PanelCentral extends JPanel {
         JScrollPane scrollLog = new JScrollPane(areaLog);
         panelLog.add(scrollLog, BorderLayout.CENTER);
         panelInferior.add(panelLog);
-        
-        // --- CORRECCIÓN AQUÍ ---
+
         // Se establece una altura preferida para el panel inferior (250px)
-        // El ancho (100) es ignorado por BorderLayout.SOUTH, pero la altura es respetada.
         panelInferior.setPreferredSize(new Dimension(100, 250));
-        // --- FIN DE LA CORRECCIÓN ---
-        
+
         add(panelInferior, BorderLayout.SOUTH);
     }
     
@@ -64,7 +66,8 @@ public class PanelCentral extends JPanel {
         panelCPU.actualizar();
         panelColas.actualizar();
         panelMetricas.actualizar();
-        // Actualizar el log (tomado del archivo original)
+        panelMemoria.actualizar();
+        // Actualizar el log
         areaLog.setText(sistema.getUltimasLineasLog(100));
         areaLog.setCaretPosition(areaLog.getDocument().getLength());
     }
