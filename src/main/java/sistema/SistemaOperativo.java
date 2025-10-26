@@ -81,8 +81,7 @@ public class SistemaOperativo implements Runnable {
     }
     
     public void agregarProceso(String nombre, TipoProceso tipo, int numInstrucciones, int prioridad) {
-        PCB proceso = adminProcesos.crearProceso(nombre, tipo, numInstrucciones, prioridad, reloj.getCicloActual());
-        agregarLog(String.format("Nuevo proceso %s(ID:%d) creado.", proceso.getNombre(), proceso.getIdProceso()));
+        agregarProcesoConLlegada(nombre, tipo, numInstrucciones, prioridad, reloj.getCicloActual());
     }
 
     /**
@@ -97,11 +96,45 @@ public class SistemaOperativo implements Runnable {
      */
     public void agregarProceso(String nombre, TipoProceso tipo, int numInstrucciones, int prioridad,
                               int ciclosParaExcepcion, int ciclosParaSatisfacerExcepcion) {
+        agregarProcesoConLlegada(nombre, tipo, numInstrucciones, prioridad, reloj.getCicloActual(),
+                                ciclosParaExcepcion, ciclosParaSatisfacerExcepcion);
+    }
+
+    /**
+     * Agrega un proceso con tiempo de llegada específico
+     *
+     * @param nombre Nombre del proceso
+     * @param tipo Tipo de proceso
+     * @param numInstrucciones Número de instrucciones
+     * @param prioridad Prioridad del proceso
+     * @param tiempoLlegada Ciclo en el que llegará el proceso
+     */
+    public void agregarProcesoConLlegada(String nombre, TipoProceso tipo, int numInstrucciones,
+                                        int prioridad, int tiempoLlegada) {
+        PCB proceso = adminProcesos.crearProceso(nombre, tipo, numInstrucciones, prioridad, tiempoLlegada);
+        agregarLog(String.format("Nuevo proceso %s(ID:%d) creado. Llegada: ciclo %d",
+                                proceso.getNombre(), proceso.getIdProceso(), tiempoLlegada));
+    }
+
+    /**
+     * Agrega un proceso I/O Bound con tiempo de llegada específico
+     *
+     * @param nombre Nombre del proceso
+     * @param tipo Tipo de proceso
+     * @param numInstrucciones Número de instrucciones
+     * @param prioridad Prioridad del proceso
+     * @param tiempoLlegada Ciclo en el que llegará el proceso
+     * @param ciclosParaExcepcion Ciclos para generar excepción
+     * @param ciclosParaSatisfacerExcepcion Ciclos para satisfacer excepción
+     */
+    public void agregarProcesoConLlegada(String nombre, TipoProceso tipo, int numInstrucciones,
+                                        int prioridad, int tiempoLlegada,
+                                        int ciclosParaExcepcion, int ciclosParaSatisfacerExcepcion) {
         PCB proceso = adminProcesos.crearProceso(nombre, tipo, numInstrucciones, prioridad,
-                                                reloj.getCicloActual(), ciclosParaExcepcion,
+                                                tiempoLlegada, ciclosParaExcepcion,
                                                 ciclosParaSatisfacerExcepcion);
-        agregarLog(String.format("Nuevo proceso %s(ID:%d) creado. E/S cada %d ciclos, duración %d ciclos.",
-                                proceso.getNombre(), proceso.getIdProceso(),
+        agregarLog(String.format("Nuevo proceso %s(ID:%d) creado. Llegada: ciclo %d, E/S cada %d ciclos (%d ciclos duración)",
+                                proceso.getNombre(), proceso.getIdProceso(), tiempoLlegada,
                                 ciclosParaExcepcion, ciclosParaSatisfacerExcepcion));
     }
     

@@ -1,8 +1,7 @@
 package memoria;
 
 import modelo.PCB;
-import java.util.HashMap;
-import java.util.Map;
+import estructura_datos.MapaMemoria;
 
 /**
  * Simula la gestión de memoria principal del sistema operativo.
@@ -12,7 +11,7 @@ import java.util.Map;
 public class AdministradorMemoria {
 
     private final int capacidadMaxima; // Número máximo de procesos en memoria
-    private final Map<Integer, Integer> procesosEnMemoria; // ID -> Tamaño en memoria (simulado)
+    private final MapaMemoria procesosEnMemoria; // ID -> Tamaño en memoria (simulado)
     private int memoriaUsada;
     private final int memoriaTotal;
 
@@ -25,7 +24,7 @@ public class AdministradorMemoria {
     public AdministradorMemoria(int capacidadMaxProcesos, int memoriaTotal) {
         this.capacidadMaxima = capacidadMaxProcesos;
         this.memoriaTotal = memoriaTotal;
-        this.procesosEnMemoria = new HashMap<>();
+        this.procesosEnMemoria = new MapaMemoria();
         this.memoriaUsada = 0;
     }
 
@@ -40,10 +39,10 @@ public class AdministradorMemoria {
         int tamanioProceso = calcularTamanioProceso(proceso);
 
         // Verificar si hay espacio disponible
-        if (procesosEnMemoria.size() < capacidadMaxima &&
+        if (procesosEnMemoria.obtenerTamanio() < capacidadMaxima &&
             (memoriaUsada + tamanioProceso) <= memoriaTotal) {
 
-            procesosEnMemoria.put(proceso.getIdProceso(), tamanioProceso);
+            procesosEnMemoria.poner(proceso.getIdProceso(), tamanioProceso);
             memoriaUsada += tamanioProceso;
             return true;
         }
@@ -57,8 +56,8 @@ public class AdministradorMemoria {
      * @param proceso PCB del proceso a liberar
      */
     public synchronized void liberarProceso(PCB proceso) {
-        Integer tamanio = procesosEnMemoria.remove(proceso.getIdProceso());
-        if (tamanio != null) {
+        int tamanio = procesosEnMemoria.remover(proceso.getIdProceso());
+        if (tamanio != -1) {
             memoriaUsada -= tamanio;
         }
     }
@@ -70,7 +69,7 @@ public class AdministradorMemoria {
      * @return true si está en memoria, false en caso contrario
      */
     public synchronized boolean estaEnMemoria(PCB proceso) {
-        return procesosEnMemoria.containsKey(proceso.getIdProceso());
+        return procesosEnMemoria.contieneClave(proceso.getIdProceso());
     }
 
     /**
@@ -79,7 +78,7 @@ public class AdministradorMemoria {
      * @return true si hay espacio, false si está llena
      */
     public synchronized boolean hayEspacioDisponible() {
-        return procesosEnMemoria.size() < capacidadMaxima;
+        return procesosEnMemoria.obtenerTamanio() < capacidadMaxima;
     }
 
     /**
@@ -110,7 +109,7 @@ public class AdministradorMemoria {
      * @return Número de procesos cargados
      */
     public synchronized int getProcesosEnMemoria() {
-        return procesosEnMemoria.size();
+        return procesosEnMemoria.obtenerTamanio();
     }
 
     /**
@@ -153,14 +152,14 @@ public class AdministradorMemoria {
      * Reinicia el administrador de memoria
      */
     public synchronized void reiniciar() {
-        procesosEnMemoria.clear();
+        procesosEnMemoria.limpiar();
         memoriaUsada = 0;
     }
 
     @Override
     public synchronized String toString() {
         return String.format("Memoria: %d/%d procesos, %.1f%% usado (%d/%d unidades)",
-                           procesosEnMemoria.size(), capacidadMaxima,
+                           procesosEnMemoria.obtenerTamanio(), capacidadMaxima,
                            getPorcentajeUso(), memoriaUsada, memoriaTotal);
     }
 }

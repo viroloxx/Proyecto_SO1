@@ -1,7 +1,7 @@
 package metricas;
 
-import java.util.ArrayList;
-import java.util.List;
+import estructura_datos.ListaEnteros;
+import estructura_datos.ListaDoubles;
 
 /**
  * Clase para almacenar el historial de métricas del sistema a lo largo del tiempo.
@@ -10,25 +10,25 @@ import java.util.List;
 public class HistorialMetricas {
 
     // Listas para almacenar el historial de cada métrica
-    private final List<Integer> ciclos;
-    private final List<Double> utilizacionCPU;
-    private final List<Double> throughput;
-    private final List<Double> tiempoEsperaPromedio;
-    private final List<Double> tiempoRespuestaPromedio;
-    private final List<Integer> procesosCompletados;
-    private final List<Integer> procesosActivos;
+    private final ListaEnteros ciclos;
+    private final ListaDoubles utilizacionCPU;
+    private final ListaDoubles throughput;
+    private final ListaDoubles tiempoEsperaPromedio;
+    private final ListaDoubles tiempoRespuestaPromedio;
+    private final ListaEnteros procesosCompletados;
+    private final ListaEnteros procesosActivos;
 
     /**
      * Constructor que inicializa las listas de historial
      */
     public HistorialMetricas() {
-        this.ciclos = new ArrayList<>();
-        this.utilizacionCPU = new ArrayList<>();
-        this.throughput = new ArrayList<>();
-        this.tiempoEsperaPromedio = new ArrayList<>();
-        this.tiempoRespuestaPromedio = new ArrayList<>();
-        this.procesosCompletados = new ArrayList<>();
-        this.procesosActivos = new ArrayList<>();
+        this.ciclos = new ListaEnteros();
+        this.utilizacionCPU = new ListaDoubles();
+        this.throughput = new ListaDoubles();
+        this.tiempoEsperaPromedio = new ListaDoubles();
+        this.tiempoRespuestaPromedio = new ListaDoubles();
+        this.procesosCompletados = new ListaEnteros();
+        this.procesosActivos = new ListaEnteros();
     }
 
     /**
@@ -45,56 +45,56 @@ public class HistorialMetricas {
     public void registrarMetricas(int ciclo, double utilCPU, double tput,
                                   double tEspera, double tRespuesta,
                                   int pCompletados, int pActivos) {
-        this.ciclos.add(ciclo);
-        this.utilizacionCPU.add(utilCPU);
-        this.throughput.add(tput);
-        this.tiempoEsperaPromedio.add(tEspera);
-        this.tiempoRespuestaPromedio.add(tRespuesta);
-        this.procesosCompletados.add(pCompletados);
-        this.procesosActivos.add(pActivos);
+        this.ciclos.agregar(ciclo);
+        this.utilizacionCPU.agregar(utilCPU);
+        this.throughput.agregar(tput);
+        this.tiempoEsperaPromedio.agregar(tEspera);
+        this.tiempoRespuestaPromedio.agregar(tRespuesta);
+        this.procesosCompletados.agregar(pCompletados);
+        this.procesosActivos.agregar(pActivos);
     }
 
     /**
      * Reinicia todo el historial de métricas
      */
     public void reiniciar() {
-        ciclos.clear();
-        utilizacionCPU.clear();
-        throughput.clear();
-        tiempoEsperaPromedio.clear();
-        tiempoRespuestaPromedio.clear();
-        procesosCompletados.clear();
-        procesosActivos.clear();
+        ciclos.limpiar();
+        utilizacionCPU.limpiar();
+        throughput.limpiar();
+        tiempoEsperaPromedio.limpiar();
+        tiempoRespuestaPromedio.limpiar();
+        procesosCompletados.limpiar();
+        procesosActivos.limpiar();
     }
 
     // Getters para acceder a las listas de historial
 
-    public List<Integer> getCiclos() {
-        return new ArrayList<>(ciclos);
+    public int[] getCiclos() {
+        return ciclos.toArray();
     }
 
-    public List<Double> getUtilizacionCPU() {
-        return new ArrayList<>(utilizacionCPU);
+    public double[] getUtilizacionCPU() {
+        return utilizacionCPU.toArray();
     }
 
-    public List<Double> getThroughput() {
-        return new ArrayList<>(throughput);
+    public double[] getThroughput() {
+        return throughput.toArray();
     }
 
-    public List<Double> getTiempoEsperaPromedio() {
-        return new ArrayList<>(tiempoEsperaPromedio);
+    public double[] getTiempoEsperaPromedio() {
+        return tiempoEsperaPromedio.toArray();
     }
 
-    public List<Double> getTiempoRespuestaPromedio() {
-        return new ArrayList<>(tiempoRespuestaPromedio);
+    public double[] getTiempoRespuestaPromedio() {
+        return tiempoRespuestaPromedio.toArray();
     }
 
-    public List<Integer> getProcesosCompletados() {
-        return new ArrayList<>(procesosCompletados);
+    public int[] getProcesosCompletados() {
+        return procesosCompletados.toArray();
     }
 
-    public List<Integer> getProcesosActivos() {
-        return new ArrayList<>(procesosActivos);
+    public int[] getProcesosActivos() {
+        return procesosActivos.toArray();
     }
 
     /**
@@ -103,7 +103,7 @@ public class HistorialMetricas {
      * @return Número de registros
      */
     public int getTamanio() {
-        return ciclos.size();
+        return ciclos.obtenerTamanio();
     }
 
     /**
@@ -112,6 +112,6 @@ public class HistorialMetricas {
      * @return true si está vacío, false en caso contrario
      */
     public boolean estaVacio() {
-        return ciclos.isEmpty();
+        return ciclos.estaVacia();
     }
 }

@@ -12,7 +12,6 @@ import org.jfree.data.xy.XYSeriesCollection;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.List;
 
 /**
  * Panel que muestra gráficos de las métricas del sistema a lo largo del tiempo.
@@ -165,21 +164,21 @@ public class PanelGrafico extends JPanel {
         serieTiempoEspera.clear();
         serieTiempoRespuesta.clear();
 
-        // Obtener los datos del historial
-        List<Integer> ciclos = historial.getCiclos();
-        List<Double> utilizacionCPU = historial.getUtilizacionCPU();
-        List<Double> throughput = historial.getThroughput();
-        List<Double> tiempoEspera = historial.getTiempoEsperaPromedio();
-        List<Double> tiempoRespuesta = historial.getTiempoRespuestaPromedio();
+        // Obtener los datos del historial como arrays
+        int[] ciclos = historial.getCiclos();
+        double[] utilizacionCPU = historial.getUtilizacionCPU();
+        double[] throughput = historial.getThroughput();
+        double[] tiempoEspera = historial.getTiempoEsperaPromedio();
+        double[] tiempoRespuesta = historial.getTiempoRespuestaPromedio();
 
         // Agregar los datos a las series
-        for (int i = 0; i < ciclos.size(); i++) {
-            int ciclo = ciclos.get(i);
-            serieUtilizacionCPU.add(ciclo, utilizacionCPU.get(i));
+        for (int i = 0; i < ciclos.length; i++) {
+            int ciclo = ciclos[i];
+            serieUtilizacionCPU.add(ciclo, utilizacionCPU[i]);
             // Multiplicamos throughput por 100 para mejor visualización
-            serieThroughput.add(ciclo, throughput.get(i) * 100);
-            serieTiempoEspera.add(ciclo, tiempoEspera.get(i));
-            serieTiempoRespuesta.add(ciclo, tiempoRespuesta.get(i));
+            serieThroughput.add(ciclo, throughput[i] * 100);
+            serieTiempoEspera.add(ciclo, tiempoEspera[i]);
+            serieTiempoRespuesta.add(ciclo, tiempoRespuesta[i]);
         }
     }
 
