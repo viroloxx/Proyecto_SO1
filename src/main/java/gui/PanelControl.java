@@ -41,7 +41,7 @@ public class PanelControl extends JPanel {
         // Fila 2: Planificación
         JPanel panelPlanificacion = new JPanel(new FlowLayout(FlowLayout.LEFT));
         lblPlanificador = new JLabel("Algoritmo:");
-        comboPlanificador = new JComboBox<>(new String[]{"FCFS", "SJF", "SRTF", "Prioridad NP", "Prioridad P", "Round Robin", "Multilevel FB Queue"});
+        comboPlanificador = new JComboBox<>(new String[]{"FCFS", "SJF", "SRTF", "Prioridad NP", "Prioridad P", "Round Robin", "Multilevel Queue", "Multilevel FB Queue"});
         panelPlanificacion.add(lblPlanificador);
         panelPlanificacion.add(comboPlanificador);
         add(panelPlanificacion);
@@ -92,7 +92,8 @@ public class PanelControl extends JPanel {
                 case "Prioridad NP": p = new Prioridad(false); break;
                 case "Prioridad P": p = new Prioridad(true); break;
                 case "Round Robin": p = new RoundRobin(sistema.getQuantumPorDefecto()); break;
-                case "Multilevel FB Queue": p = new MultilevelQueue(); break;
+                case "Multilevel Queue": p = new MultilevelQueue(); break;
+                case "Multilevel FB Queue": p = new MultilevelFeedbackQueue(); break;
                 default: p = new FCFS();
             }
             sistema.cambiarPlanificador(p);
@@ -235,13 +236,65 @@ public class PanelControl extends JPanel {
     
     public void actualizar() {
         lblCiclo.setText("Ciclo: " + sistema.getReloj().getCicloActual());
-        
+
         if (!sistema.isEjecutando()) {
             lblEstado.setText("Detenido");
         } else if (sistema.estaPausado()) {
             lblEstado.setText("Pausado");
         } else {
             lblEstado.setText("Ejecutando");
+        }
+    }
+
+    /**
+     * Cambia el planificador del sistema y actualiza el combo box
+     * @param nombrePlanificador Nombre del planificador (como aparece en el JSON)
+     * @param quantum Quantum para Round Robin y MLFQ
+     */
+    public void cambiarPlanificadorDesdeJSON(String nombrePlanificador, int quantum) {
+        // Mapear nombre del JSON a nombre del combo box
+        String nombreCombo = mapearNombrePlanificador(nombrePlanificador);
+
+        // Actualizar combo box
+        comboPlanificador.setSelectedItem(nombreCombo);
+
+        // Crear y aplicar el planificador
+        Planificador p = crearPlanificador(nombreCombo, quantum);
+        if (p != null) {
+            sistema.cambiarPlanificador(p);
+        }
+    }
+
+    /**
+     * Mapea el nombre del planificador del JSON al nombre del combo box
+     */
+    private String mapearNombrePlanificador(String nombreJSON) {
+        switch (nombreJSON) {
+            case "FCFS": return "FCFS";
+            case "SJF": return "SJF";
+            case "SRTF": return "SRTF";
+            case "Prioridad NP": return "Prioridad NP";
+            case "Prioridad P": return "Prioridad P";
+            case "Round Robin": return "Round Robin";
+            case "Multilevel Queue": return "Multilevel Queue";
+            case "Multilevel FB Queue": return "Multilevel FB Queue";
+            default: return "FCFS"; // Por defecto
+        }
+    }
+
+    /**
+     * Crea una instancia del planificador según el nombre
+     */
+    private Planificador crearPlanificador(String nombre, int quantum) {
+        switch (nombre) {
+            case "SJF": return new SJF(false);
+            case "SRTF": return new SJF(true);
+            case "Prioridad NP": return new Prioridad(false);
+            case "Prioridad P": return new Prioridad(true);
+            case "Round Robin": return new RoundRobin(quantum);
+            case "Multilevel Queue": return new MultilevelQueue();
+            case "Multilevel FB Queue": return new MultilevelFeedbackQueue();
+            default: return new FCFS();
         }
     }
 }

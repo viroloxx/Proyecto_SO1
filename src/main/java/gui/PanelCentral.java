@@ -71,4 +71,12 @@ public class PanelCentral extends JPanel {
         areaLog.setText(sistema.getUltimasLineasLog(100));
         areaLog.setCaretPosition(areaLog.getDocument().getLength());
     }
+
+    /**
+     * Obtiene el panel de control
+     * @return Panel de control
+     */
+    public PanelControl getPanelControl() {
+        return panelControl;
+    }
 }

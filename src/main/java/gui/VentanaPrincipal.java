@@ -207,6 +207,10 @@ public class VentanaPrincipal extends JFrame {
 
                     if (opcion == JOptionPane.YES_OPTION) {
                         sistema.getReloj().setDuracionCicloMs(configSistema.getDuracionCicloMs());
+
+                        // Aplicar el planificador del JSON
+                        aplicarPlanificador(configSistema.getPlanificadorInicial(), configSistema.getQuantumRR());
+
                         // Guardar configuración para persistencia
                         GestorConfiguracion.guardarConfiguracion(configSistema);
                     }
@@ -237,6 +241,17 @@ public class VentanaPrincipal extends JFrame {
         }
     }
 
+
+    /**
+     * Aplica el planificador especificado en el JSON
+     * @param nombrePlanificador Nombre del planificador del JSON
+     * @param quantum Quantum para Round Robin y MLFQ
+     */
+    private void aplicarPlanificador(String nombrePlanificador, int quantum) {
+        if (panelCentral != null && panelCentral.getPanelControl() != null) {
+            panelCentral.getPanelControl().cambiarPlanificadorDesdeJSON(nombrePlanificador, quantum);
+        }
+    }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {

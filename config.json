@@ -1,5 +1,5 @@
 {
-  "duracionCicloMs": 300,
-  "planificadorInicial": "FCFS",
-  "quantumRR": 3
+  "duracionCicloMs": 100,
+  "planificadorInicial": "Round Robin",
+  "quantumRR": 4
 }

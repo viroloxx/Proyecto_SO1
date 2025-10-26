@@ -202,14 +202,11 @@ public class SistemaOperativo implements Runnable {
                 // 6c. Ejecutar ciclo de CPU
                 if (procesoEnCPU != null) {
                     boolean generoExcepcion = cpu.ejecutarCiclo(ciclo);
-                    
-                    if (generoExcepcion) {
-                        // Proceso genera E/S (Bloqueado)
-                        agregarLog(String.format("%s(ID:%d) genera E/S y se bloquea.", procesoEnCPU.getNombre(), procesoEnCPU.getIdProceso()));
-                        PCB p = cpu.liberarProceso();
-                        manejadorExc.agregarProcesoBloqueado(p);
-                    } else if (procesoEnCPU.getTiempoRestante() == 0) {
-                        // Proceso terminado
+
+                    // IMPORTANTE: Verificar primero si el proceso terminó
+                    // Un proceso puede generar E/S en su última instrucción
+                    if (procesoEnCPU.getTiempoRestante() == 0) {
+                        // Proceso terminado (incluso si generó E/S en la última instrucción)
                         agregarLog(String.format("%s(ID:%d) ha terminado.", procesoEnCPU.getNombre(), procesoEnCPU.getIdProceso()));
                         PCB p = cpu.liberarProceso();
                         p.setEstado(EstadoProceso.TERMINADO);
@@ -217,6 +214,11 @@ public class SistemaOperativo implements Runnable {
                         metricas.registrarProcesoCompletado(p, ciclo);
                         // Liberar memoria del proceso terminado
                         adminMemoria.liberarProceso(p);
+                    } else if (generoExcepcion) {
+                        // Proceso genera E/S y aún tiene instrucciones pendientes
+                        agregarLog(String.format("%s(ID:%d) genera E/S y se bloquea.", procesoEnCPU.getNombre(), procesoEnCPU.getIdProceso()));
+                        PCB p = cpu.liberarProceso();
+                        manejadorExc.agregarProcesoBloqueado(p);
                     }
                     metricas.registrarCiclo(true); // CPU ocupada
                 } else {
